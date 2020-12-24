@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.test.bookms.mapper.MsBorrowMapper">
+  <resultMap id="BaseResultMap" type="cn.test.bookms.entity.MsBorrow">
+    <id column="borrow_id" jdbcType="INTEGER" property="borrowId" />
+    <result column="borrow_reader_id" jdbcType="INTEGER" property="borrowReaderId" />
+    <result column="borrow_book_id" jdbcType="INTEGER" property="borrowBookId" />
+    <result column="borrow_booking" jdbcType="VARCHAR" property="borrowBooking" />	<!-- enum('未预约', '已预约') default'未预约', -->
+    <result column="borrow_renew" jdbcType="VARCHAR" property="borrowRenew" />		<!-- enum('不续借', '续借') default'不续借', -->
+    <result column="borrow_time" jdbcType="TIMESTAMP" property="borrowTime" />
+    <result column="borrow_return_time" jdbcType="TIMESTAMP" property="borrowReturnTime" />
+    <result column="borrow_penalty" jdbcType="FLOAT" property="borrowPenalty" />	<!-- default 0, -->
+  </resultMap>
+  <sql id="Base_Column_List">
+    borrow_id, borrow_reader_id, borrow_book_id, 
+    borrow_booking, borrow_renew, 
+    borrow_time, borrow_return_time, borrow_penalty
+  </sql>
+  <!-- 插入借阅的图书信息 -->
+  <insert id="insertBorrowDetail_borrow" parameterType="cn.test.bookms.entity.MsBorrow">
+    insert into ms_borrow (
+    borrow_id, borrow_reader_id, borrow_book_id, 
+    borrow_booking, borrow_renew, 
+    borrow_time, borrow_return_time, borrow_penalty
+    )
+    values (
+    #{borrowId,jdbcType=INTEGER}, #{borrowReaderId,jdbcType=INTEGER}, #{borrowBookId,jdbcType=INTEGER}, 
+    null, null, 
+    now(), date_add(now(), interval 1 month), 0
+    )
+  </insert>
+  <insert id="insertBorrowDetail_book" parameterType="cn.test.bookms.entity.MsBorrow">
+    insert into ms_borrow (
+    borrow_id, borrow_reader_id, borrow_book_id, 
+    borrow_booking, borrow_renew, 
+    borrow_time, borrow_return_time, borrow_penalty
+    )
+    values (
+    #{borrowId,jdbcType=INTEGER}, #{borrowReaderId,jdbcType=INTEGER}, #{borrowBookId,jdbcType=INTEGER}, 
+    '预约中', null, 
+    null, null, 0
+    )
+  </insert>
+  <!-- 归还图书，删除借阅信息 -->
+  <delete id="deleteBorrowDetail" parameterType="java.lang.Integer">
+	delete from ms_borrow
+	where borrow_reader_id = #{borrowReaderId,jdbcType=INTEGER} 
+		and borrow_book_id = #{borrowBookId,jdbcType=INTEGER}
+  </delete>
+  <!-- 全部的逾期信息 -->
+  <select id="selectOverdueDetail" 
+  	resultMap="BaseResultMap">
+	select
+	<include refid="Base_Column_List" />
+	from ms_borrow
+	where borrow_return_time &lt; now()
+	<!-- order by borrow_id desc	逆序排序会乱 -->
+  </select>
+  <!-- 读者个人的借阅信息 -->
+  <select id="selectBorrowDetail_1" 
+  	parameterType="java.lang.Integer" resultMap="BaseResultMap">
+	select
+	<include refid="Base_Column_List" />
+	from ms_borrow
+	where borrow_reader_id = #{adminId,jdbcType=INTEGER}
+	<!-- order by borrow_id desc	逆序排序会乱 -->
+  </select>
+  <!-- 查询一本书是否已被借阅 -->
+  <select id="selectByRIdAndBId" 
+  	parameterType="java.lang.Integer" resultMap="BaseResultMap">
+	select
+	<include refid="Base_Column_List" />
+	from ms_borrow
+	where borrow_reader_id=#{adminId} and borrow_book_id=#{borrowId}
+  </select>
+  <!-- 续借 -->
+  <update id="updateBorrowReturnTime"
+	parameterType="java.lang.Integer">
+	update ms_borrow
+	set borrow_return_time = date_add(borrow_return_time, interval 15 day), borrow_renew = '已续借'
+	where borrow_reader_id = #{adminId} and borrow_book_id = #{borrowId} and borrow_renew is null
+  </update>
+  <!-- 罚款 -->
+  <update id="updateBorrowPenalty"
+	parameterType="cn.test.bookms.entity.MsBorrow">
+	update ms_borrow
+	set borrow_penalty = #{borrowPenalty, jdbcType=FLOAT}
+	where borrow_id = #{borrowId, jdbcType=INTEGER}
+  </update>
+  <!-- 罚款总金额 -->
+  <select id="selectSumPenalty" parameterType="java.lang.Integer" resultType="java.lang.Float">
+  	select sum(borrow_penalty) from ms_borrow where borrow_reader_id=#{adminId}
+  </select>
+  <!-- 查询是否有逾期 -->
+  <select id="selectPenalty" parameterType="java.lang.Integer" resultType="java.lang.Integer">
+  	select borrow_penalty from ms_borrow where borrow_reader_id=#{adminId}
+  </select>
+  <!-- 计算已借阅图书数量 -->
+  <select id="countBorrowBook" parameterType="java.lang.Integer" resultType="java.lang.Integer">
+  	select count(*) from ms_borrow where borrow_reader_id=#{adminId}
+  </select>
+</mapper>

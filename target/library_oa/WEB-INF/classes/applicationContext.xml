@@ -1,0 +1,89 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:aop="http://www.springframework.org/schema/aop"
+    xmlns:tx="http://www.springframework.org/schema/tx"
+    xmlns:util="http://www.springframework.org/schema/util"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans-4.2.xsd
+        http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context-4.2.xsd
+       http://www.springframework.org/schema/aop
+       http://www.springframework.org/schema/aop/spring-aop-4.2.xsd
+       http://www.springframework.org/schema/tx
+       http://www.springframework.org/schema/tx/spring-tx-4.2.xsd
+       http://www.springframework.org/schema/util 
+       http://www.springframework.org/schema/util/spring-util-4.2.xsd">
+ 
+ 
+     <!-- 配置组件扫描器 --> 
+     <context:component-scan base-package="cn.test.bookms"/> 
+       
+	<!-- 读取db.properties -->
+	<util:properties id="dbConfig"
+		location="classpath:db.properties" />
+		
+	<!-- 配置数据源：BasicDataSource -->
+	<bean id="ds" 
+		class="org.apache.commons.dbcp.BasicDataSource">
+		<!-- 以下配置中 -->
+		<!-- name的值是BasicDataSource中的属性名(方法名) -->
+		<!-- value的值是引用以上读取的配置文件 -->
+		<property name="url" 
+			value="#{dbConfig.url}" />
+		<property name="driverClassName" 
+			value="#{dbConfig.driver}" />
+		<property name="username" 
+			value="#{dbConfig.username}" />
+		<property name="password" 
+			value="#{dbConfig.password}" />
+		<property name="initialSize" 
+			value="#{dbConfig.initialSize}" />
+		<property name="maxActive" 
+			value="#{dbConfig.maxActive}" />
+	</bean>
+     
+    <!-- 配置session工厂 -->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="ds"/>
+        <!-- 自动扫描mappers.xml文件 -->
+        <property name="mapperLocations" value="classpath:mappers/*.xml"></property>
+        <!-- mybatis 总配置文件 -->
+        <property name="configLocation" value="classpath:mybatis-config.xml"/>
+    </bean>
+     
+     <!-- Mapper扫描器 -->
+     <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer"> 
+     	<!-- Mapper接口所在的包 -->
+     	<property name="basePackage" value="cn.test.bookms.mapper"/>
+     	<property name="sqlSessionFactoryBeanName" value="sqlSessionFactory" />
+     </bean>
+     
+     
+    <!-- 事务管理器 -->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="ds"/>
+    </bean>
+     
+    <!-- 配置AOP通知 -->
+    <tx:advice id="txAdvice" transaction-manager="transactionManager">
+        <!-- 配置事务属性 -->
+        <tx:attributes>
+            <!-- 添加事务管理的方法 -->
+            <tx:method name="insert*" propagation="REQUIRED"/>
+            <tx:method name="add*" propagation="REQUIRED"/>
+            <tx:method name="delete*" propagation="REQUIRED"/>
+            <tx:method name="update*" propagation="REQUIRED"/>
+            <tx:method name="select*" read-only="true"/>
+        </tx:attributes>
+     </tx:advice>
+      
+     <!-- 配置AOP，为添加事务管理的操作配置AOP -->
+    <aop:config>
+        <!-- 引入的Spring定义的事务通知，需要使用aop:advisor -->
+        <aop:advisor advice-ref="txAdvice"
+            pointcut="execution(* cn.test.bookms.service.*.*(..))"
+        />
+    </aop:config> 
+ 
+</beans>

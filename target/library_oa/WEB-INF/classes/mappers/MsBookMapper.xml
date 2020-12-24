@@ -1,0 +1,318 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.test.bookms.mapper.MsBookMapper">
+	<resultMap id="BaseResultMap"
+		type="cn.test.bookms.entity.MsBook">
+		<id column="id" jdbcType="INTEGER" property="id" />
+		<result column="title" jdbcType="VARCHAR" property="title" />
+		<result column="ISBN" jdbcType="VARCHAR" property="isbn" />
+		<result column="author" jdbcType="VARCHAR" property="author" />
+		<result column="introduction" jdbcType="VARCHAR"
+			property="introduction" />
+		<result column="price" jdbcType="VARCHAR" property="price" />
+		<result column="publish_time" jdbcType="VARCHAR"
+			property="publishTime" />
+		<result column="category_id" jdbcType="INTEGER"
+			property="categoryId" />
+		<result column="image" jdbcType="VARCHAR" property="image" />
+		<result column="create_time" jdbcType="DATE"
+			property="createTime" />
+		<result column="create_admin" jdbcType="VARCHAR"
+			property="createAdmin" />
+		<result column="update_pre_admin" jdbcType="VARCHAR"
+			property="updatePreAdmin" />
+		<result column="del_flg" jdbcType="INTEGER" property="delFlg" />
+		<result column="sum" jdbcType="INTEGER" property="sum" />
+		<result column="remainder" jdbcType="INTEGER" property="remainder" />
+	</resultMap>
+	<!-- 数据表所有的列 -->
+	<sql id="Base_Column_List">
+		id, title, ISBN, author, introduction, price, publish_time,
+		category_id,
+		image, create_time,
+		create_admin, update_pre_admin, del_flg, sum, remainder
+	</sql>
+	 <!-- 缴费2，但未还书 书总量-1，余量不变 -->
+	<update id="updateBookSum"
+		parameterType="java.lang.Integer">
+		update ms_book
+		set sum = sum-1
+		where id = #{id,jdbcType=INTEGER}
+	</update>
+	<!-- 借阅图书,剩余数量-1 -->
+	<update id="updateBookRemainderSub"
+		parameterType="java.lang.Integer">
+		update ms_book
+		set remainder = remainder-1
+		where id = #{id,jdbcType=INTEGER}
+	</update>
+	<!-- 借阅图书,剩余数量+1 -->
+	<update id="updateBookRemainderAdd"
+		parameterType="java.lang.Integer">
+		update ms_book
+		set remainder = remainder+1
+		where id = #{id,jdbcType=INTEGER}
+	</update>
+	<!-- 查找图书，通过主键 -->
+	<select id="selectByPrimaryKey"
+		parameterType="java.lang.Integer" resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List" />
+		from ms_book
+		where id = #{id,jdbcType=INTEGER}
+	</select>
+
+	<!-- 逻辑删除 del_flg设置为0 -->
+	<delete id="deleteByPrimaryKey"
+		parameterType="java.lang.Integer">
+		update ms_book
+		set del_flg = 0
+		where id =
+		#{id,jdbcType=INTEGER}
+	</delete>
+
+	<!-- 彻底删除图书 -->
+	<delete id="deleteBookReal"
+		parameterType="java.lang.Integer">
+		delete from ms_book
+		where id =
+		#{id,jdbcType=INTEGER}
+	</delete>
+	<!-- 重新上架图书 -->
+	<update id="updateBackBook"
+		parameterType="java.lang.Integer">
+		update ms_book
+		set del_flg = 1
+		where id = #{id,jdbcType=INTEGER}
+	</update>
+	
+	
+	<insert id="insert" parameterType="cn.test.bookms.entity.MsBook">
+		insert into ms_book (id,
+		title, ISBN,
+		author, introduction, price,
+		publish_time, category_id,
+		image,
+		create_time, create_admin, update_pre_admin,
+		del_flg, sum, remainder)
+		values
+		(#{id,jdbcType=INTEGER}, #{title,jdbcType=VARCHAR},
+		#{isbn,jdbcType=VARCHAR},
+		#{author,jdbcType=VARCHAR},
+		#{introduction,jdbcType=VARCHAR}, #{price,jdbcType=VARCHAR},
+		#{publishTime,jdbcType=VARCHAR}, #{categoryId,jdbcType=INTEGER},
+		#{image,jdbcType=VARCHAR},
+		#{createTime,jdbcType=DATE},
+		#{createAdmin,jdbcType=VARCHAR}, #{updatePreAdmin,jdbcType=VARCHAR},
+		#{delFlg,jdbcType=INTEGER}, #{sum}, #{sum})
+	</insert>
+	<insert id="insertSelective"
+		parameterType="cn.test.bookms.entity.MsBook">
+		insert into ms_book
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="id != null">
+				id,
+			</if>
+			<if test="title != null">
+				title,
+			</if>
+			<if test="isbn != null">
+				ISBN,
+			</if>
+			<if test="author != null">
+				author,
+			</if>
+			<if test="introduction != null">
+				introduction,
+			</if>
+			<if test="price != null">
+				price,
+			</if>
+			<if test="publishTime != null">
+				publish_time,
+			</if>
+			<if test="categoryId != null">
+				category_id,
+			</if>
+			<if test="image != null">
+				image,
+			</if>
+			<if test="createTime != null">
+				create_time,
+			</if>
+			<if test="createAdmin != null">
+				create_admin,
+			</if>
+			<if test="updatePreAdmin != null">
+				update_pre_admin,
+			</if>
+			<if test="delFlg != null">
+				del_flg,
+			</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="id != null">
+				#{id,jdbcType=INTEGER},
+			</if>
+			<if test="title != null">
+				#{title,jdbcType=VARCHAR},
+			</if>
+			<if test="isbn != null">
+				#{isbn,jdbcType=VARCHAR},
+			</if>
+			<if test="author != null">
+				#{author,jdbcType=VARCHAR},
+			</if>
+			<if test="introduction != null">
+				#{introduction,jdbcType=VARCHAR},
+			</if>
+			<if test="price != null">
+				#{price,jdbcType=VARCHAR},
+			</if>
+			<if test="publishTime != null">
+				#{publishTime,jdbcType=VARCHAR},
+			</if>
+			<if test="categoryId != null">
+				#{categoryId,jdbcType=INTEGER},
+			</if>
+			<if test="image != null">
+				#{image,jdbcType=VARCHAR},
+			</if>
+			<if test="createTime != null">
+				#{createTime,jdbcType=DATE},
+			</if>
+			<if test="createAdmin != null">
+				#{createAdmin,jdbcType=VARCHAR},
+			</if>
+			<if test="updatePreAdmin != null">
+				#{updatePreAdmin,jdbcType=VARCHAR},
+			</if>
+			<if test="delFlg != null">
+				#{delFlg,jdbcType=INTEGER},
+			</if>
+		</trim>
+	</insert>
+	<update id="updateByPrimaryKeySelective"
+		parameterType="cn.test.bookms.entity.MsBook">
+		update ms_book
+		<set>
+			<if test="title != null">
+				title = #{title,jdbcType=VARCHAR},
+			</if>
+			<if test="isbn != null">
+				ISBN = #{isbn,jdbcType=VARCHAR},
+			</if>
+			<if test="author != null">
+				author = #{author,jdbcType=VARCHAR},
+			</if>
+			<if test="introduction != null">
+				introduction = #{introduction,jdbcType=VARCHAR},
+			</if>
+			<if test="price != null">
+				price = #{price,jdbcType=VARCHAR},
+			</if>
+			<if test="publishTime != null">
+				publish_time = #{publishTime,jdbcType=VARCHAR},
+			</if>
+			<if test="categoryId != null">
+				category_id = #{categoryId,jdbcType=INTEGER},
+			</if>
+			<if test="image != null">
+				image = #{image,jdbcType=VARCHAR},
+			</if>
+			<if test="createTime != null">
+				create_time = #{createTime,jdbcType=DATE},
+			</if>
+			<if test="createAdmin != null">
+				create_admin = #{createAdmin,jdbcType=VARCHAR},
+			</if>
+			<if test="updatePreAdmin != null">
+				update_pre_admin = #{updatePreAdmin,jdbcType=VARCHAR},
+			</if>
+			<if test="delFlg != null">
+				del_flg = #{delFlg,jdbcType=INTEGER},
+			</if>
+			<if test="remainder != null">
+				remainder = #{remainder,jdbcType=INTEGER},
+			</if>
+			<if test="sum != null">
+				sum = #{sum,jdbcType=INTEGER},
+			</if>
+		</set>
+		where id = #{id,jdbcType=INTEGER}
+	</update>
+	<update id="updateByPrimaryKey"
+		parameterType="cn.test.bookms.entity.MsBook">
+		update ms_book
+		set title = #{title,jdbcType=VARCHAR},
+		ISBN = #{isbn,jdbcType=VARCHAR},
+		author = #{author,jdbcType=VARCHAR},
+		introduction = #{introduction,jdbcType=VARCHAR},
+		price =
+		#{price,jdbcType=VARCHAR},
+		publish_time =
+		#{publishTime,jdbcType=VARCHAR},
+		category_id =
+		#{categoryId,jdbcType=INTEGER},
+		image = #{image,jdbcType=VARCHAR},
+		create_time = #{createTime,jdbcType=DATE},
+		create_admin =
+		#{createAdmin,jdbcType=VARCHAR},
+		update_pre_admin =
+		#{updatePreAdmin,jdbcType=VARCHAR},
+		del_flg =
+		#{delFlg,jdbcType=INTEGER}
+		where id = #{id,jdbcType=INTEGER}
+	</update>
+	<!-- 分页显示借阅图书信息 -->
+	<select id="selectByAdminId" parameterType="java.lang.Integer"
+		resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List" />
+		from ms_book
+		inner join ms_borrow on ms_book.id=ms_borrow.borrow_book_id 
+		where borrow_reader_id=#{adminId,jdbcType=INTEGER}
+		<!-- order by borrow_id desc	逆序排序 -->
+	</select>
+	
+	<select id="selectByPage" parameterType="java.util.Map"
+		resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List" />
+		from ms_book
+		where del_flg=1
+		<if test="title!=null and title != ''">
+			and title like
+			concat(concat('%',#{title,jdbcType=VARCHAR}),'%')
+		</if>
+		<if test="author != null and author != ''">
+			and author like
+			concat(concat('%',#{author,jdbcType=VARCHAR}),'%')
+		</if>
+		<if test="start!=null and size!=null">
+			limit #{start},#{size}
+		</if>
+	</select>
+	<select id="selectCount" resultType="java.lang.Integer">
+		select count(*) from ms_book
+		where del_flg=1
+	</select>
+
+	<!-- 最近上架的图书(最近2个月) -->
+	<select id="selectNewBook" resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List" />
+		from ms_book
+		where del_flg=1
+		and create_time>DATE_SUB(CURDATE(),
+		INTERVAL 2 MONTH)
+	</select>
+	<!-- -->
+	<select id="selectBookDel" resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List" />
+		from ms_book
+		where del_flg = 0
+	</select>
+
+</mapper>

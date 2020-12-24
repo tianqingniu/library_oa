@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.test.bookms.mapper.MsOverdueMapper">
+  <resultMap id="BaseResultMap" type="cn.test.bookms.entity.MsOverdue">
+    <id column="over_id" jdbcType="INTEGER" property="overId" />
+    <result column="admin_number" jdbcType="VARCHAR" property="adminNumber" />
+    <result column="admin_name" jdbcType="VARCHAR" property="adminName" />
+    <result column="ISBN" jdbcType="VARCHAR" property="ISBN" />
+    <result column="title" jdbcType="VARCHAR" property="title" />
+    <result column="borrow_penalty" jdbcType="FLOAT" property="borrowPenalty" />
+    <result column="book_id" jdbcType="INTEGER" property="bookId" />
+    <result column="reader_id" jdbcType="INTEGER" property="readerId" />
+  </resultMap>
+	
+  <select id="selectOverdueByPage" resultMap="BaseResultMap">
+    select admin_number,admin_name,ISBN,title,borrow_penalty,b.id book_id,a.id reader_id  
+    from ms_admin a,ms_borrow,ms_book b
+    where a.id=borrow_reader_id 
+    and b.id=borrow_book_id 
+    and borrow_return_time &lt; now()
+    <if test="start!=null and size!=null">
+		limit #{start},#{size}
+	</if>
+  </select>
+  <select id="selectCount" resultType="java.lang.Integer">
+	select count(*) 
+	from ms_admin a,ms_borrow,ms_book b
+    where a.id=borrow_reader_id 
+    and b.id=borrow_book_id 
+    and borrow_return_time &lt; now()
+  </select>
+  
+</mapper>
